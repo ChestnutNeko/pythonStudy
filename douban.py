@@ -1,4 +1,4 @@
-# -*- coding = utf-8 -*-
+# -*- codeing = utf-8 -*-
 
 from bs4 import BeautifulSoup #网页解析
 import re #正则表达式，进行文字匹配
@@ -10,9 +10,11 @@ def main():
     baseurl = "https://movie.douban.com/top250?start="
     # 1、爬取网页
     datalist = getData(baseurl)
-    savepath = "豆瓣电影Top250.xls"
+    # savepath = "豆瓣电影Top250.xls"
+    dbpath = "movie.db"
     # 3、保存数据
-    saveData(datalist,savepath)
+    # saveData(datalist,savepath)
+    saveDataDB(datalist,dbpath)
 
     # askURL("https://movie.douban.com/top250?start=")
 # 影片链接
@@ -118,6 +120,49 @@ def saveData(datalist,savepath):
     # 保存数据
     book.save(savepath)
 
+def saveDataDB(datalist, dbpath):
+    init_db(dbpath)
+    conn = sqlite3.connect(dbpath)
+    cur = conn.cursor()
+    for data in datalist:
+        for index in range(len(data)):
+            if index == 4 or index == 5:
+                continue
+            data[index] = '"'+data[index]+'"'
+        sql = '''
+            insert into movie250 (info_link,pic_link,cname,score,ename,rated,introduction,info)
+            values(%s)
+        '''%",".join(data)
+        # print(sql)
+        cur.execute(sql)
+        conn.commit()
+    cur.close()
+    conn.close()
+
+
+def init_db(dbpath):
+    sql = '''
+        create table movie250
+        (
+            id integer primary key autoincrement,
+            info_link text,
+            pic_link text,
+            cname varchar,
+            ename varchar,
+            score numeric,
+            rated numeric,
+            introduction text,
+            info text
+        )
+    ''' # 创建数据表
+    conn = sqlite3.connect(dbpath)
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    conn.commit()
+    conn.close()
+
 if __name__ == "__main__":
     main()
     print("over")
+
+# - ------- ---``- -------- ---``- 
